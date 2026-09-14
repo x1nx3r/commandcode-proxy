@@ -426,32 +426,59 @@ async function ensureInitialized(apiKey, signal) {
 // ── 模型列表 ───────────────────────────────────────
 const MODELS = [
   // Anthropic
+  { id: 'claude-sonnet-5', name: 'Claude Sonnet 5' },
   { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
+  { id: 'claude-fable-5-1', name: 'Claude Fable 5.1' },
+  { id: 'claude-fable-5', name: 'Claude Fable 5' },
+  { id: 'claude-opus-5', name: 'Claude Opus 5' },
   { id: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
   { id: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
   { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5' },
   // OpenAI
+  { id: 'gpt-6-astra', name: 'GPT-6 Astra' },
+  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol' },
+  { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra' },
+  { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
   { id: 'gpt-5.5', name: 'GPT-5.5' },
   { id: 'gpt-5.4', name: 'GPT-5.4' },
-  { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini' },
   { id: 'gpt-5.3-codex', name: 'GPT-5.3 Codex' },
+  { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini' },
   // DeepSeek
   { id: 'deepseek/deepseek-v4-pro', name: 'DeepSeek V4 Pro' },
   { id: 'deepseek/deepseek-v4-flash', name: 'DeepSeek V4 Flash' },
+  { id: 'deepseek/deepseek-v4-flash-vision-exp', name: 'DeepSeek V4 Flash Vision Exp' },
+  { id: 'deepseek/deepseek-v4-flash-fast', name: 'DeepSeek V4 Flash Fast' },
+  { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek V4.1 Flash' },
   // Kimi
+  { id: 'moonshotai/Kimi-K3', name: 'Kimi K3' },
+  { id: 'moonshotai/Kimi-K2.7-Code', name: 'Kimi K2.7 Code' },
+  { id: 'moonshotai/Kimi-K2.7-Code-Highspeed', name: 'Kimi K2.7 Code Highspeed' },
   { id: 'moonshotai/Kimi-K2.6', name: 'Kimi K2.6' },
   { id: 'moonshotai/Kimi-K2.5', name: 'Kimi K2.5' },
   // GLM
+  { id: 'zai-org/GLM-5.3', name: 'GLM 5.3' },
+  { id: 'z-ai/glm-5.3-flash', name: 'GLM 5.3 Flash' },
+  { id: 'zai-org/GLM-5.2', name: 'GLM 5.2' },
+  { id: 'zai-org/GLM-5.2-Fast', name: 'GLM 5.2 Fast' },
   { id: 'zai-org/GLM-5.1', name: 'GLM 5.1' },
   { id: 'zai-org/GLM-5', name: 'GLM 5' },
   // MiniMax
   { id: 'MiniMaxAI/MiniMax-M3', name: 'MiniMax M3' },
   { id: 'MiniMaxAI/MiniMax-M2.7', name: 'MiniMax M2.7' },
+  { id: 'minimax/minimax-m3-free', name: 'MiniMax M3 (Free)' },
+  { id: 'minimax/minimax-m2.7-free', name: 'MiniMax M2.7 (Free)' },
   { id: 'MiniMaxAI/MiniMax-M2.5', name: 'MiniMax M2.5' },
+  { id: 'MiniMaxAI/MiniMax-M3-Free', name: 'MiniMax M3 (Free)' },
   // Qwen
   { id: 'Qwen/Qwen3.6-Max-Preview', name: 'Qwen 3.6 Max Preview' },
   { id: 'Qwen/Qwen3.6-Plus', name: 'Qwen 3.6 Plus' },
   { id: 'Qwen/Qwen3.7-Max', name: 'Qwen 3.7 Max' },
+  { id: 'Qwen/Qwen3.7-Plus', name: 'Qwen 3.7 Plus' },
+  { id: 'Qwen/Qwen3.8-Max-0902', name: 'Qwen 3.8 Max 0902' },
+  { id: 'Qwen/Qwen3.8-Max', name: 'Qwen 3.8 Max' },
+  { id: 'Qwen/Qwen3.8-27B', name: 'Qwen 3.8 27B' },
+  { id: 'Qwen/Qwen3.8-Flash', name: 'Qwen 3.8 Flash' },
+  { id: 'Qwen/Qwen3.7-Flash', name: 'Qwen 3.7 Flash' },
   // Step
   { id: 'stepfun/Step-3.7-Flash', name: 'Step 3.7 Flash' },
   { id: 'stepfun/Step-3.5-Flash', name: 'Step 3.5 Flash' },
@@ -459,8 +486,39 @@ const MODELS = [
   { id: 'xiaomi/mimo-v2.5-pro', name: 'MiMo V2.5 Pro' },
   { id: 'xiaomi/mimo-v2.5', name: 'MiMo V2.5' },
   // Gemini
+  { id: 'google/gemini-3.8-flash', name: 'Gemini 3.8 Flash' },
+  { id: 'google/gemini-3.7-flash', name: 'Gemini 3.7 Flash' },
+  { id: 'google/gemini-3.6-flash', name: 'Gemini 3.6 Flash' },
   { id: 'google/gemini-3.5-flash', name: 'Gemini 3.5 Flash' },
+  { id: 'google/gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite' },
   { id: 'google/gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite' },
+  // Tencent
+  { id: 'tencent/hy4-preview', name: 'Tencent HY4 Preview' },
+  { id: 'tencent/hy3-paid', name: 'Tencent HY3 (Paid)' },
+  { id: 'tencent/Hy3', name: 'Tencent HY3' },
+  // xAI
+  { id: 'xai/grok-4.5', name: 'Grok 4.5' },
+  { id: 'xai/grok-4.6', name: 'Grok 4.6' },
+  // Meta
+  { id: 'meta/muse-spark-1.1', name: 'Muse Spark 1.1' },
+  { id: 'meta/muse-spark-1.2', name: 'Muse Spark 1.2' },
+  { id: 'meta/muse-spark-1.2-contributor', name: 'Muse Spark 1.2 Contributor' },
+  { id: 'meta/muse-spark-1.3', name: 'Muse Spark 1.3' },
+  { id: 'meta/muse-spark-1.3-contributor', name: 'Muse Spark 1.3 Contributor' },
+  // NVIDIA
+  { id: 'nvidia/nemotron-3-ultra-550b-a55b', name: 'NVIDIA Nemotron 3 Ultra 550B' },
+  // Sakana
+  { id: 'sakana/fugu-ultra', name: 'Fugu Ultra' },
+  // Thinking Machines
+  { id: 'thinkingmachines/inkling', name: 'Inkling' },
+  { id: 'thinkingmachines/inkling-small', name: 'Inkling Small' },
+  // Meituan
+  { id: 'meituan/LongCat-2.0:free', name: 'LongCat 2.0 (Free)' },
+  // Poolside
+  { id: 'poolside/laguna-s-2.1-free', name: 'Laguna S 2.1 (Free)' },
+  // InclusionAI
+  { id: 'inclusionai/ling-3.0-flash-free', name: 'Ling 3.0 Flash (Free)' },
+  { id: 'inclusionai/ling-3.0-flash-sante:free', name: 'Ling 3.0 Flash Sante (Free)' },
 ];
 
 // ── 工具函数 ───────────────────────────────────────
