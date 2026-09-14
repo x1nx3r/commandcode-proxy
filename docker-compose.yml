@@ -8,6 +8,7 @@ services:
     environment:
       PORT: "3050"
       CC_API_KEY: "${CC_API_KEY:-}"
+      CC_CLIENT_KEY: "${CC_CLIENT_KEY:-}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://127.0.0.1:3050/health"]

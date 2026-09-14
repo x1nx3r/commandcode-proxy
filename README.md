@@ -72,6 +72,7 @@ commandcode/
 | `PROJECT_SLUG` | `projectSlug` |
 | `LOG_FILE` | `logFile` |
 | `CC_API_KEY` | `apiKey` — fallback key injected via secret/env; used when the request carries no (or an unparseable) key, per-request headers win |
+| `CC_CLIENT_KEY` | *(no config field)* — proxy-issued client gate: when set, requests must present exactly this key (`Authorization: Bearer` or `x-api-key`); the proxy then uses `apiKey`/`CC_API_KEY` upstream. Pair with `CC_API_KEY` for secret-injected deployments |
 | `CC_USE_PROVIDER_MODELS` | `useProviderModels` |
 | `CC_STREAM_IDLE_MS` | Streaming upstream read idle timeout (default `30000`) |
 | `CC_NONSTREAM_IDLE_MS` | Non-streaming upstream read idle timeout (default `90000`) |

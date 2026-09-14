@@ -28,6 +28,8 @@ function loadConfig() {
     fingerprintSalt: '',
     deviceProjectDir: '', // 伪造的项目目录（留空则用内置的 C:\Users\dev\projects\app） // 改这个值 = 让所有账号换一台设备（见设备指纹注释）
     emptySystemPlaceholder: true, // 无 system prompt 时发空格占位，阻止 CC 上游注入 ~7.5K token 默认提示词（issue #17）
+    apiKey: '',
+    clientKey: '', // CC_CLIENT_KEY：代理自签发门禁 key。设置后请求必须原样出示它，上游改用 apiKey
   };
 
   const configPath = resolve(__dirname, 'config.json');
@@ -47,6 +49,7 @@ function loadConfig() {
   if (process.env.PROJECT_SLUG) defaults.projectSlug = process.env.PROJECT_SLUG;
   if (process.env.LOG_FILE) defaults.logFile = process.env.LOG_FILE;
   if (process.env.CC_API_KEY) defaults.apiKey = process.env.CC_API_KEY.trim();
+  if (process.env.CC_CLIENT_KEY) defaults.clientKey = process.env.CC_CLIENT_KEY.trim();
   if (process.env.CC_USE_PROVIDER_MODELS) defaults.useProviderModels = process.env.CC_USE_PROVIDER_MODELS !== 'false';
   if (process.env.CMD_ZDR !== undefined) defaults.zdr = process.env.CMD_ZDR === '1';
   if (process.env.CC_FINGERPRINT_SALT !== undefined) defaults.fingerprintSalt = process.env.CC_FINGERPRINT_SALT;
@@ -1036,20 +1039,33 @@ function sendJSON(res, status, data) {
 }
 
 function getApiKey(headers) {
+  const rawAuth = headers['authorization'] || headers['Authorization'] || '';
+  const bearer = rawAuth.startsWith('Bearer ') ? rawAuth.slice(7).trim() : '';
+  const xKey = (headers['x-api-key'] || headers['X-Api-Key'] || '').trim();
+
+  // 门禁模式（CC_CLIENT_KEY）：客户端必须原样出示这把 key，上游改用配置的 fallback apiKey
+  if (CFG.clientKey) {
+    return bearer === CFG.clientKey || xKey === CFG.clientKey ? (CFG.apiKey || null) : null;
+  }
+
   // Try Authorization: Bearer header (OpenAI SDK style)
-  const auth = headers['authorization'] || headers['Authorization'] || '';
-  if (auth.startsWith('Bearer ')) {
-    const match = auth.slice(7).match(/user_[a-zA-Z0-9_-]+/);
+  if (bearer) {
+    const match = bearer.match(/user_[a-zA-Z0-9_-]+/);
     if (match) return match[0];
   }
   // Fall back to x-api-key header (Anthropic SDK style)
-  const xKey = headers['x-api-key'] || headers['X-Api-Key'] || '';
   if (xKey) {
     const match = xKey.match(/user_[a-zA-Z0-9_-]+/);
     if (match) return match[0];
   }
   // 请求没带 key 时回落到配置的 apiKey（config.json 或 CC_API_KEY 注入的密钥）
   return CFG.apiKey || null;
+}
+
+function authRequiredMessage() {
+  return CFG.clientKey
+    ? 'Invalid API key. Present the configured client key (CC_CLIENT_KEY) via Authorization: Bearer <key> or x-api-key'
+    : 'Missing API key. Send in Authorization: Bearer <key> or x-api-key header';
 }
 
 // ── 流式转发 ────────────────────────────────────────
@@ -1112,7 +1128,7 @@ async function handleChatCompletions(req, res) {
 
   const apiKey = getApiKey(req.headers);
   if (!apiKey) {
-    sendJSON(res, 401, { error: { message: 'Missing API key. Send in Authorization: Bearer <key> or x-api-key header', type: 'auth_error' } });
+    sendJSON(res, 401, { error: { message: authRequiredMessage(), type: 'auth_error' } });
     return;
   }
 
@@ -1951,7 +1967,7 @@ async function handleMessages(req, res) {
 
   const apiKey = getApiKey(req.headers);
   if (!apiKey) {
-    sendJSON(res, 401, { type: 'error', error: { type: 'authentication_error', message: 'Missing API key. Send in Authorization: Bearer <key> or x-api-key header' } });
+    sendJSON(res, 401, { type: 'error', error: { type: 'authentication_error', message: authRequiredMessage() } });
     return;
   }
 
@@ -2723,7 +2739,7 @@ async function handleResponses(req, res) {
   const apiKey = getApiKey(req.headers);
   if (!apiKey) {
     sendResponsesError(res, 401, 'authentication_error',
-      'Missing API key. Send in Authorization: Bearer <key> or x-api-key header');
+      authRequiredMessage());
     return;
   }
 
@@ -3098,5 +3114,12 @@ server.listen(CFG.port, CFG.host, () => {
     log('info', 'No API key in config. API key must be sent in Authorization: Bearer <key> header per request.');
   } else if (!/^user_/.test(CFG.apiKey)) {
     log('warn', 'Configured fallback API key (config.json apiKey / CC_API_KEY) does not match user_… key shape; upstream will likely reject requests');
+  }
+  if (CFG.clientKey) {
+    if (!CFG.apiKey) {
+      log('warn', 'CC_CLIENT_KEY is set but no fallback apiKey (CC_API_KEY / config.json) is configured; authenticated requests will be rejected with 401');
+    } else {
+      log('info', 'Client key auth enabled (CC_CLIENT_KEY): requests must present this key; upstream requests use the configured fallback apiKey');
+    }
   }
 });
