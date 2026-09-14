@@ -55,7 +55,7 @@ commandcode/
 | `host` | `0.0.0.0` | Listen address |
 | `apiBase` | `https://api.commandcode.ai` | CC API base URL |
 | `projectSlug` | `cc-proxy` | `x-project-slug` header |
-| `apiKey` | `""` | Optional fallback API key (requests can also send it via header) |
+| `apiKey` | `""` | Optional fallback API key (or inject with the `CC_API_KEY` env var, e.g. from a Docker/Compose secret); used when a request sends no key — a per-request header key always wins |
 | `logFile` | `""` | Log file path (empty = console only) |
 | `logLevel` | `info` | Log level |
 | `useProviderModels` | `true` | Dynamically fetch model list from Provider API |
@@ -71,6 +71,7 @@ commandcode/
 | `CC_API_BASE` | `apiBase` |
 | `PROJECT_SLUG` | `projectSlug` |
 | `LOG_FILE` | `logFile` |
+| `CC_API_KEY` | `apiKey` — fallback key injected via secret/env; used when the request carries no (or an unparseable) key, per-request headers win |
 | `CC_USE_PROVIDER_MODELS` | `useProviderModels` |
 | `CC_STREAM_IDLE_MS` | Streaming upstream read idle timeout (default `30000`) |
 | `CC_NONSTREAM_IDLE_MS` | Non-streaming upstream read idle timeout (default `90000`) |

@@ -46,6 +46,7 @@ function loadConfig() {
   if (process.env.CC_API_BASE) defaults.apiBase = process.env.CC_API_BASE;
   if (process.env.PROJECT_SLUG) defaults.projectSlug = process.env.PROJECT_SLUG;
   if (process.env.LOG_FILE) defaults.logFile = process.env.LOG_FILE;
+  if (process.env.CC_API_KEY) defaults.apiKey = process.env.CC_API_KEY.trim();
   if (process.env.CC_USE_PROVIDER_MODELS) defaults.useProviderModels = process.env.CC_USE_PROVIDER_MODELS !== 'false';
   if (process.env.CMD_ZDR !== undefined) defaults.zdr = process.env.CMD_ZDR === '1';
   if (process.env.CC_FINGERPRINT_SALT !== undefined) defaults.fingerprintSalt = process.env.CC_FINGERPRINT_SALT;
@@ -1047,7 +1048,8 @@ function getApiKey(headers) {
     const match = xKey.match(/user_[a-zA-Z0-9_-]+/);
     if (match) return match[0];
   }
-  return null;
+  // 请求没带 key 时回落到配置的 apiKey（config.json 或 CC_API_KEY 注入的密钥）
+  return CFG.apiKey || null;
 }
 
 // ── 流式转发 ────────────────────────────────────────
@@ -3094,5 +3096,7 @@ server.listen(CFG.port, CFG.host, () => {
   }
   if (!CFG.apiKey) {
     log('info', 'No API key in config. API key must be sent in Authorization: Bearer <key> header per request.');
+  } else if (!/^user_/.test(CFG.apiKey)) {
+    log('warn', 'Configured fallback API key (config.json apiKey / CC_API_KEY) does not match user_… key shape; upstream will likely reject requests');
   }
 });
